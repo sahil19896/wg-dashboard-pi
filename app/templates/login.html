@@ -1,0 +1,39 @@
+
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Login • WG Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/static/css/themes.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/v36-wide.css') }}">
+</head>
+<body class="min-h-screen flex items-center justify-center p-6">
+  <div class="card p-8 w-full max-w-sm">
+    <h1 class="text-2xl font-semibold mb-6 text-center">🔐 Admin Login</h1>
+    <form method="post" action="/login" class="space-y-4">
+      <input name="username" class="w-full p-3 rounded bg-slate-800 text-white" placeholder="Username" required>
+      <input name="password" type="password" class="w-full p-3 rounded bg-slate-800 text-white" placeholder="Password" required>
+      <label class="flex items-center gap-2 text-slate-300 text-sm">
+        <input type="checkbox" name="remember"> Remember me
+      </label>
+      <button class="w-full p-3 rounded bg-blue-600 hover:bg-blue-700 text-white font-medium">Sign in</button>
+    </form>
+  </div>
+  <script src="{{ url_for('static', filename='js/ui-polish.js') }}"></script>
+
+<!-- About Modal -->
+<div class="modal" id="aboutModal">
+  <div class="modal-card">
+    <div class="flex" style="justify-content:space-between;align-items:center">
+      <h3 style="margin:0">About PiVPN Dashboard</h3>
+      <button class="btn secondary" id="aboutClose">Close</button>
+    </div>
+    <hr class="sep">
+    <div id="aboutContent" class="content"></div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,3 @@
+
+# Allow 'pi' to run WireGuard, PiVPN, and limited system commands without password.
+pi ALL=(ALL) NOPASSWD: /usr/bin/wg, /usr/bin/wg-quick,   /bin/systemctl restart wg-quick@*, /bin/systemctl start wg-quick@*, /bin/systemctl stop wg-quick@*, /bin/systemctl reload wg-quick@*,   /usr/local/bin/pivpn -l, /usr/local/bin/pivpn -a *, /usr/local/bin/pivpn -r *, /usr/local/bin/pivpn -qr *,   /bin/journalctl -u wg-quick@wg0 -n *, /bin/journalctl -n *,   /usr/bin/tee /etc/wireguard/wg0.conf, /bin/echo, /bin/cat, /usr/bin/awk, /usr/bin/sed,   /sbin/reboot, /sbin/poweroff

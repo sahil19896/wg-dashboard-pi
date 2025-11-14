@@ -1,0 +1,17 @@
+
+[Unit]
+Description=WireGuard Dashboard (Gunicorn)
+After=network-online.target
+
+[Service]
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/wg-dashboard-pi-v3.6
+EnvironmentFile=/home/pi/wg-dashboard-pi-v3.6/.env
+ExecStart=/home/pi/wg-dashboard-pi-v3.6/.venv/bin/gunicorn -c gunicorn.conf.py wsgi:app
+Restart=always
+RestartSec=3
+Environment="LC_ALL=C.UTF-8" "LANG=C.UTF-8"
+
+[Install]
+WantedBy=multi-user.target

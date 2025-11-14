@@ -1,0 +1,7 @@
+
+:root { --bg:#0b1220; --fg:#e5e7eb; --card: rgba(255,255,255,.06); --border: rgba(255,255,255,.1); }
+:root[data-theme='light'] { --bg:#f7fafc; --fg:#1f2937; --card:#fff; --border:#e5e7eb; }
+:root[data-theme='oled'] { --bg:#000; --fg:#e5e7eb; --card:#0a0a0a; --border:#222; }
+:root[data-theme='nord'] { --bg:#2e3440; --fg:#eceff4; --card:#3b4252; --border:#4c566a; }
+body { background:var(--bg); color:var(--fg); }
+.card { background:var(--card); border:1px solid var(--border); border-radius:1rem; }
