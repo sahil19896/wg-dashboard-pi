@@ -53,11 +53,11 @@ def sys_logs():
     except:
         n = "100"
     if kind == "wg":
-        cmd = ["sudo","journalctl","-u",f"wg-quick@{current_app.config['WG_INTERFACE']}", "-n", n, "--no-pager"]
+        cmd = ["/usr/bin/sudo","journalctl","-u",f"wg-quick@{current_app.config['WG_INTERFACE']}", "-n", n, "--no-pager"]
     elif kind == "syslog":
-        cmd = ["sudo","journalctl","-n", n, "--no-pager"]
+        cmd = ["/usr/bin/sudo","journalctl","-n", n, "--no-pager"]
     elif kind == "auth":
-        cmd = ["sudo","journalctl","-u","ssh", "-n", n, "--no-pager"]
+        cmd = ["/usr/bin/sudo","journalctl","-u","ssh", "-n", n, "--no-pager"]
     else:
         return jsonify({"error":"unknown kind"}), 400
     out = subprocess.run(cmd, capture_output=True, text=True)
@@ -68,9 +68,9 @@ def sys_logs():
 def power():
     action = request.json.get("action")
     if action == "reboot":
-        subprocess.Popen(["sudo","reboot"])
+        subprocess.Popen(["/usr/bin/sudo","reboot"])
         return jsonify({"ok":True})
     if action == "shutdown":
-        subprocess.Popen(["sudo","poweroff"])
+        subprocess.Popen(["/usr/bin/sudo","poweroff"])
         return jsonify({"ok":True})
     return jsonify({"error":"unknown action"}), 400

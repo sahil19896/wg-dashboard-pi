@@ -23,7 +23,7 @@ def sh(cmd):
 
 def pivpn_list():
     bin = current_app.config["PIVPN_BIN"]
-    out = sh(["sudo", bin, "-l"])
+    out = sh(["/usr/bin/sudo", bin, "-l"])
     peers = []
     lines = [l for l in out.splitlines() if l.strip()]
     try:
@@ -40,10 +40,10 @@ def pivpn_list():
 def pivpn_add(name, days=365):
     bin = current_app.config["PIVPN_BIN"]
     try:
-        out = sh(["sudo", bin, "-a", "-n", name, "-d", str(days)])
+        out = sh(["/usr/bin/sudo", bin, "-a", "-n", name, "-d", str(days)])
     except RuntimeError as e:
         if "unexpected argument" in str(e).lower() or "invalid option" in str(e).lower():
-            out = sh(["sudo", bin, "-a", "-n", name])
+            out = sh(["/usr/bin/sudo", bin, "-a", "-n", name])
         else:
             raise
     return out
@@ -51,9 +51,9 @@ def pivpn_add(name, days=365):
 def pivpn_revoke(name):
     bin = current_app.config["PIVPN_BIN"]
     try:
-        out = sh(["sudo", bin, "-r", name, "-y"])
+        out = sh(["/usr/bin/sudo", bin, "-r", name, "-y"])
     except RuntimeError:
-        out = sh(["bash","-c", f"yes | sudo {bin} -r {name}"])
+        out = sh(["bash","-c", f"yes | /usr/bin/sudo {bin} -r {name}"])
     return out
 
 @pivpn_bp.get("/list")

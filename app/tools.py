@@ -17,12 +17,12 @@ def require_token(f):
     return wrapper
 
 WHITELIST = {
-    "wg_show": ["sudo","wg","show"],
-    "wg_quick_status": ["sudo","systemctl","status","wg-quick@wg0"],
+    "wg_show": ["/usr/bin/sudo","wg","show"],
+    "wg_quick_status": ["/usr/bin/sudo","systemctl","status","wg-quick@wg0"],
     "ip_addr": ["ip","addr"],
     "df_h": ["df","-h"],
     "uptime": ["uptime"],
-    "tailsys": ["sudo","journalctl","-u","wg-quick@wg0","-n","50","--no-pager"]
+    "tailsys": ["/usr/bin/sudo","journalctl","-u","wg-quick@wg0","-n","50","--no-pager"]
 }
 
 @tools_bp.post("/console")

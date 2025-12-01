@@ -11,7 +11,7 @@ def sh(cmd):
 
 def wg_dump():
     wg = current_app.config["WG_BIN"]
-    out = sh(["sudo", wg, "show", "all", "dump"])
+    out = sh(["/usr/bin/sudo", wg, "show", "all", "dump"])
     lines = out.strip().splitlines()
     peers = []
     now = int(time.time())
@@ -38,39 +38,39 @@ def wg_dump():
 
 def interface_status():
     try:
-        out = sh(["sudo", current_app.config["WG_BIN"], "show"])
+        out = sh(["/usr/bin/sudo", current_app.config["WG_BIN"], "show"])
         return out.strip()
     except Exception as e:
         return f"Error: {e}"
 
 def restart_interface():
     iface = current_app.config["WG_INTERFACE"]
-    sh(["sudo", "systemctl", "restart", f"wg-quick@{iface}"])
+    sh(["/usr/bin/sudo", "systemctl", "restart", f"wg-quick@{iface}"])
     return "restarted"
 
 def start_interface():
     iface = current_app.config["WG_INTERFACE"]
-    sh(["sudo", "systemctl", "start", f"wg-quick@{iface}"])
+    sh(["/usr/bin/sudo", "systemctl", "start", f"wg-quick@{iface}"])
     return "started"
 
 def stop_interface():
     iface = current_app.config["WG_INTERFACE"]
-    sh(["sudo", "systemctl", "stop", f"wg-quick@{iface}"])
+    sh(["/usr/bin/sudo", "systemctl", "stop", f"wg-quick@{iface}"])
     return "stopped"
 
 def add_peer(public_key, allowed_ips):
     iface = current_app.config["WG_INTERFACE"]
     conf_path = f"/etc/wireguard/{iface}.conf"
     line = f"\n[Peer]\nPublicKey = {public_key}\nAllowedIPs = {allowed_ips}\n"
-    sh(["bash", "-c", f"echo {shlex.quote(line)} | sudo tee -a {conf_path} > /dev/null"])
-    sh(["sudo", "wg-quick", "save", iface])
-    sh(["sudo", "systemctl", "reload", f"wg-quick@{iface}"])
+    sh(["bash", "-c", f"echo {shlex.quote(line)} | /usr/bin/sudo tee -a {conf_path} > /dev/null"])
+    sh(["/usr/bin/sudo", "wg-quick", "save", iface])
+    sh(["/usr/bin/sudo", "systemctl", "reload", f"wg-quick@{iface}"])
     return "peer added"
 
 def remove_peer(public_key):
     iface = current_app.config["WG_INTERFACE"]
-    sh(["sudo", "wg", "set", iface, "peer", public_key, "remove"])
-    sh(["sudo", "wg-quick", "save", iface])
+    sh(["/usr/bin/sudo", "wg", "set", iface, "peer", public_key, "remove"])
+    sh(["/usr/bin/sudo", "wg-quick", "save", iface])
     return "peer removed"
 
 def generate_keys():
