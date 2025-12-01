@@ -11,14 +11,23 @@ themeSel.onchange = ()=>{ localStorage.setItem('theme', themeSel.value); applyTh
 
 /* tabs */
 const tabs = document.querySelectorAll('.tab');
-document.querySelectorAll('.tablink').forEach(btn => btn.onclick = (e)=>{
+const tabButtons = document.querySelectorAll('.tablink');
+tabButtons.forEach(btn => btn.onclick = (e)=>{
   e.preventDefault();
   tabs.forEach(t => t.classList.remove('active'));
+  tabButtons.forEach(b => b.classList.remove('active'));
   document.getElementById(btn.dataset.tab).classList.add('active');
+  btn.classList.add('active');
 });
 
 const metaToken = document.querySelector('meta[name=api-token]')?.content || '';
 const h = { 'Authorization': 'Bearer ' + metaToken };
+const statActiveEl = document.getElementById('statActivePeers');
+const statIdleEl = document.getElementById('statIdlePeers');
+const statTotalEl = document.getElementById('statTotalPeers');
+const statLastRefreshEl = document.getElementById('statLastRefresh');
+const statClientsEl = document.getElementById('statClients');
+const statUptimeEl = document.getElementById('statUptime');
 
 async function call(method, url, data, responseType='json') {
   const res = await axios({ method, url, data, headers: h, responseType });
@@ -32,19 +41,26 @@ async function loadPeers() {
     const peers = res.data;
     const s = (document.getElementById('search').value || '').toLowerCase();
     const tbody = document.getElementById('peerTable');
-    tbody.innerHTML = peers
-      .filter(p => p.public_key.toLowerCase().includes(s) || p.endpoint.toLowerCase().includes(s))
+    const filtered = peers
+      .filter(p => p.public_key.toLowerCase().includes(s) || p.endpoint.toLowerCase().includes(s));
+    tbody.innerHTML = filtered
       .map(p => `
-        <tr class="border-b border-slate-800 hover:bg-slate-900/50">
-          <td class="py-2 px-3">${p.interface}</td>
-          <td class="py-2 px-3">${p.public_key.slice(0,16)}…</td>
-          <td class="py-2 px-3">${p.endpoint}</td>
-          <td class="py-2 px-3">${p.allowed_ips}</td>
-          <td class="py-2 px-3">${p.latest_handshake_human}</td>
-          <td class="py-2 px-3">${p.rx_h}</td>
-          <td class="py-2 px-3">${p.tx_h}</td>
-          <td class="py-2 px-3"><span class="px-2 py-1 rounded text-xs ${p.status==='active'?'bg-emerald-600/30 text-emerald-300':'bg-rose-600/30 text-rose-300'}">${p.status}</span></td>
+        <tr>
+          <td>${p.interface}</td>
+          <td><code>${p.public_key.slice(0,16)}…</code></td>
+          <td>${p.endpoint}</td>
+          <td>${p.allowed_ips}</td>
+          <td>${p.latest_handshake_human}</td>
+          <td>${p.rx_h}</td>
+          <td>${p.tx_h}</td>
+          <td><span class="status-pill ${p.status}">${p.status}</span></td>
         </tr>`).join('');
+    const active = peers.filter(p => p.status === 'active').length;
+    const idle = peers.length - active;
+    if(statTotalEl) statTotalEl.textContent = peers.length;
+    if(statActiveEl) statActiveEl.textContent = active;
+    if(statIdleEl) statIdleEl.textContent = idle;
+    if(statLastRefreshEl) statLastRefreshEl.textContent = new Date().toLocaleTimeString();
   } catch(e) {
     console.error(e);
   }
@@ -108,16 +124,19 @@ async function loadClients(){
   const rows = res.data.rows || [];
   const tbody = document.getElementById('clientTable');
   tbody.innerHTML = rows.map((r,i)=>`
-    <tr class="border-b border-slate-800">
-      <td class="py-2 px-3">${i+1}</td>
-      <td class="py-2 px-3 font-mono">${r.raw}</td>
-      <td class="py-2 px-3 flex gap-2">
-        <button class="px-2 py-1 bg-indigo-600/60 hover:bg-indigo-600 rounded text-xs" onclick="openQRModal('${(r.cols&&r.cols[0])?r.cols[0]:''}')">QR</button>
-        <a class="px-2 py-1 bg-slate-700/60 hover:bg-slate-700 rounded text-xs" href="/api/pivpn/download/${(r.cols&&r.cols[0])?r.cols[0]:''}" target="_blank">Config</a>
-        <button class="px-2 py-1 bg-rose-600/60 hover:bg-rose-600 rounded text-xs" onclick="revokeClient('${(r.cols&&r.cols[0])?r.cols[0]:''}')">Revoke</button>
+    <tr>
+      <td>${i+1}</td>
+      <td><span style="font-family:'JetBrains Mono','SFMono-Regular',monospace;font-size:.85rem;">${r.raw}</span></td>
+      <td>
+        <div class="duo" style="gap:8px;flex-wrap:nowrap;">
+          <button class="btn secondary" style="padding:8px 12px;font-size:.8rem;" onclick="openQRModal('${(r.cols&&r.cols[0])?r.cols[0]:''}')">QR</button>
+          <a class="btn ghost" style="padding:8px 12px;font-size:.8rem;border-color:var(--border);" href="/api/pivpn/download/${(r.cols&&r.cols[0])?r.cols[0]:''}" target="_blank">Config</a>
+          <button class="btn" style="padding:8px 12px;font-size:.8rem;background:var(--danger);" onclick="revokeClient('${(r.cols&&r.cols[0])?r.cols[0]:''}')">Revoke</button>
+        </div>
       </td>
     </tr>
   `).join('');
+  if(statClientsEl) statClientsEl.textContent = rows.length;
 }
 async function addClient(){ const name=document.getElementById('clientName').value.trim(); const days=+document.getElementById('clientDays').value||365; if(!name) return alert('Enter a name'); await call('post','/api/pivpn/add',{name,days}); loadClients(); }
 async function revokeClient(name){ if(!name) return alert('Missing name'); if(!confirm('Revoke '+name+'?')) return; await call('post','/api/pivpn/revoke',{name}); loadClients(); }
@@ -131,16 +150,19 @@ async function loadSystem(){
   const box = document.getElementById('sysBox');
   const fmt = (n)=> typeof n==='number' ? n.toFixed(1) : '—';
   const fmtTime = (s)=> `${Math.floor(s/3600)}h ${Math.floor(s/60)%60}m`;
-  const top = (d.top||[]).map(t=>`${t[1]||'proc'} (${t[2]||0}%)`).join(', ');
   box.innerHTML = `
-    <div class="bg-slate-900/60 rounded-xl p-4">CPU: <b>${fmt(d.cpu)}%</b></div>
-    <div class="bg-slate-900/60 rounded-xl p-4">Mem: <b>${fmt(d.mem)}%</b></div>
-    <div class="bg-slate-900/60 rounded-xl p-4">Disk: <b>${fmt(d.disk)}%</b></div>
-    <div class="bg-slate-900/60 rounded-xl p-4">Temp: <b>${d.temp_c ? d.temp_c.toFixed(1)+' °C' : 'N/A'}</b></div>
-    <div class="bg-slate-900/60 rounded-xl p-4">Uptime: <b>${fmtTime(d.uptime_sec)}</b></div>
-    <div class="bg-slate-900/60 rounded-xl p-4">Load: <b>${d.load.map(x=>x.toFixed(2)).join(', ')}</b></div>
-    <div class="bg-slate-900/60 rounded-xl p-4 col-span-3">Top: <b>${top}</b></div>
+    <div class="stat-card"><p>CPU</p><h3>${fmt(d.cpu)}%</h3></div>
+    <div class="stat-card"><p>Memory</p><h3>${fmt(d.mem)}%</h3></div>
+    <div class="stat-card"><p>Disk</p><h3>${fmt(d.disk)}%</h3></div>
+    <div class="stat-card"><p>Temperature</p><h3>${d.temp_c ? d.temp_c.toFixed(1)+' °C' : 'N/A'}</h3></div>
+    <div class="stat-card"><p>Uptime</p><h3>${fmtTime(d.uptime_sec)}</h3></div>
+    <div class="stat-card"><p>Load</p><h3>${d.load.map(x=>x.toFixed(2)).join(', ')}</h3></div>
+    <div class="stat-card" style="grid-column:span 2;">
+      <p>Top processes</p>
+      <ul class="top-list">${(d.top||[]).map(t=>`<li>${t[1]||'proc'} · ${t[2]||0}%</li>`).join('')}</ul>
+    </div>
   `;
+  if(statUptimeEl) statUptimeEl.textContent = fmtTime(d.uptime_sec);
 }
 setInterval(loadSystem, 10000); loadSystem();
 
